@@ -1,7 +1,7 @@
 from time import sleep
 from fastapi import FastAPI
 from app.db import metadata, engine
-from app.routes import users
+from app.routes import user, auth
 
 while True:
     try:
@@ -11,4 +11,5 @@ while True:
         sleep(1)
 
 app = FastAPI()
-app.include_router(users.router, prefix="/api/v1")
+app.include_router(user.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")

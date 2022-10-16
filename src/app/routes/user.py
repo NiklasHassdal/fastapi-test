@@ -1,21 +1,20 @@
-from fastapi import APIRouter, HTTPException
-from typing import List
+from fastapi import APIRouter, HTTPException, Depends
 from app.db import engine, users
-from app.security import hash_password
-from app.models.users import UserGet, UserPost
+from app.security import TokenData, authentication_required, hash_password
+from app.models.user import UserGet, UserPost
 from sqlalchemy.exc import IntegrityError
 
 router = APIRouter()
 
 
-@router.get("/users", response_model=List[UserGet])
-async def get_users():
-    query = users.select()
+@router.get("/user", response_model=UserGet)
+async def get_user(token_data: TokenData = Depends(authentication_required)):
+    query = users.select(users.c.id == token_data.user_id)
     result = engine.execute(query)
-    return result.fetchall()
+    return result.fetchone()
 
 
-@router.post("/users", response_model=UserGet)
+@router.post("/sign_up", response_model=UserGet)
 async def post_users(user: UserPost):
     try:
         values = user.dict()
