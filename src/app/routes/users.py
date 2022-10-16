@@ -1,13 +1,25 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from typing import List
-from app.models.users import UserGet
+from app.db import engine, users
+from app.models.users import UserGet, UserPost
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter()
 
 
 @router.get("/users", response_model=List[UserGet])
 async def get_users():
-    users = [
-        UserGet(id=1, name="Test User", email="example@example.com"),
-    ]
-    return users
+    query = users.select()
+    result = engine.execute(query)
+    return result.fetchall()
+
+
+@router.post("/users", response_model=UserGet)
+async def post_users(user: UserPost):
+    try:
+        values = user.dict()
+        query = users.insert(values)
+        result = engine.execute(query)
+        return {**values, **result.inserted_primary_key}
+    except IntegrityError:
+        raise HTTPException(409, "User with that email already exists")
