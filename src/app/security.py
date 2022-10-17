@@ -5,7 +5,7 @@ from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from pydantic import BaseModel
-import jwt
+from jose import jwt
 
 
 class TokenData(BaseModel):
