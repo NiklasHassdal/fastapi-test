@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from jose import jwt
+from redis import Redis
 
 
 class TokenData(BaseModel):
@@ -23,9 +24,12 @@ secret = getenv("JWT_SECRET")
 algorithm = getenv("JWT_ALGORITHM") or "HS256"
 access_token_expiry = getenv("JWT_ACCESS_TOKEN_EXPIRY") or 900
 refresh_token_expiry = getenv("JWT_REFRESH_TOKEN_EXPIRY") or 604800
+redis_host = getenv("REDIS_HOST")
+redis_port = getenv("REDIS_PORT") or 6379
 
 pwd_context = CryptContext(schemes=["bcrypt"])
 oauth2_scheme = HTTPBearer(auto_error=False)
+redis = Redis(host=redis_host, port=redis_port)
 
 
 def hash_password(password: str) -> str:
@@ -50,7 +54,16 @@ def decode_jwt(token: str, expected_type: str = None) -> TokenData:
         raise HTTPException(403, "Expected '%s' but got '%s'" % (expected_type, token_data.type))
     if datetime.now(timezone.utc) > token_data.exp:
         raise HTTPException(403, "Token has expired")
+    if redis.get(token):
+        raise HTTPException(403, "Token has been revoked")
     return token_data
+
+
+def revoke_token(token: str) -> bool:
+    token_data: TokenData = decode_jwt(token)
+    duration = token_data.exp - datetime.now(timezone.utc)
+    if duration >= timedelta(0):
+        redis.setex(token, duration, "revoked")
 
 
 def create_access_token(user: Any) -> str:
