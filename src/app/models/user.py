@@ -11,3 +11,8 @@ class UserPost(BaseModel):
     name: str
     email: str
     password: str
+
+
+class LoginPost(BaseModel):
+    email: str
+    password: str

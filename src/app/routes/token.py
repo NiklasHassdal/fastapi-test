@@ -1,20 +1,8 @@
 from fastapi import APIRouter, HTTPException, Body
 from app.db import engine, users
-from app.security import create_tokens, decode_jwt, revoke_token, verify_password, TokenPair
-from app.models.auth import LoginPost
+from app.security import create_tokens, decode_jwt, revoke_token, TokenPair
 
 router = APIRouter()
-
-
-@router.post("/auth/login", response_model=TokenPair)
-async def post_login(credentials: LoginPost):
-    query = users.select(users.c.email == credentials.email)
-    result = engine.execute(query)
-    user = result.fetchone()
-    if user and verify_password(credentials.password, user.password):
-        return create_tokens(user)
-    else:
-        raise HTTPException(403, "Wrong email or password")
 
 
 @router.post("/token/refresh", response_model=TokenPair)

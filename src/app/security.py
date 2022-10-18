@@ -4,20 +4,10 @@ from typing import Any
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
-from pydantic import BaseModel
 from jose import jwt
 from redis import Redis
 
-
-class TokenData(BaseModel):
-    type: str
-    exp: datetime
-    user_id: int
-
-
-class TokenPair(BaseModel):
-    access_token: str
-    refresh_token: str
+from app.models.token import TokenData, TokenPair
 
 
 secret = getenv("JWT_SECRET")
