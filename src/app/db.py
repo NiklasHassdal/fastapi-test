@@ -21,3 +21,14 @@ users = Table(
     Column("password", String),
     UniqueConstraint("email"),
 )
+
+
+users2 = Table(
+    "users2",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String),
+    Column("email", String),
+    Column("password", String),
+    UniqueConstraint("email"),
+)
